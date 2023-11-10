@@ -93,7 +93,7 @@ const HomePage = function () {
     if (credentials?.error) {
       dispatch(userActions.getCurrentAuthenticatedUser());
     }
-    if (credentials === {} || credentials.loading) {
+    if (Object.keys(credentials).length === 0 || credentials.loading) {
       setCredentialsLoading(true);
     } else {
       if (credentials.items) {
