@@ -6,7 +6,7 @@
 # [Requirements]
 # Prerequisites for deploying the Yubico WebAuthn Starter Kit to AWS Cloud:
 #   1. AWS CLI install and configured
-#   2. Docker 
+#   2. Docker
 
 # [Get Started]
 #   1. (Optional) Modify the ./deployStarterKit.json with your AWS Profile, Region, etc...
@@ -34,7 +34,7 @@ check_cmd_in_path docker
 function getSuffix {
     echo $(if test -z $(grep SUFFIX $CONFIG_FILE | sed -e 's/.*://;s/"//g;s/,//g')
         then echo $(getRandomValue 6)
-        else 
+        else
         echo $(grep SUFFIX $CONFIG_FILE | sed -e 's/.*://;s/"//g;s/,//g')
     fi)
 }
@@ -51,7 +51,7 @@ function getParam {
 
 # Create a random number for repeated automated deployment
 function getRandomValue {
-    echo $(ping -c 1 yubico.com |md5 | head -c$1; echo)
+    echo $(ping -c 1 yubico.com | md5sum | head -c$1; echo)
 }
 
 # |************************** Paramaters **********************************|
@@ -82,8 +82,8 @@ S3_BUCKET_NAME=$(getParam S3_BUCKET_NAME webauthnkit-$SUFFIX-$(getRandomValue 6)
 USER_POOL_NAME=$(getParam USER_POOL_NAME webauthnkit-userpool-$SUFFIX)
 
 # Amazon RDS Aurora database
-# Make the DATABASE_NAME lowercase before RDS does and no dashes.. 
-DATABASE_NAME=$(getParam DATABASE_NAME webauthnkitdb$SUFFIX | sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/') 
+# Make the DATABASE_NAME lowercase before RDS does and no dashes..
+DATABASE_NAME=$(getParam DATABASE_NAME webauthnkitdb$SUFFIX | sed 'y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/')
 DATABASE_MASTER_USERNAME=$(getParam DATABASE_MASTER_USERNAME dbmaster$SUFFIX)
 
 # Auto-generate a random 16 character password each time for DATABASE_MASTER_USERNAME, if not specified
@@ -184,7 +184,7 @@ aws cloudformation wait stack-create-complete --stack-name $CF_STACK_NAME --regi
 # CloudFormation stack has completed, check status
 CREATE_STACK_STATUS=$(aws cloudformation describe-stacks --stack-name $CF_STACK_NAME --region $AWS_REGION --profile $AWS_CLI_PROFILE --query 'Stacks[0].StackStatus' --output text)
 # Exit this script if the CloudFormation stack deployment via AWS SAM CLI (or CloudFormation Stack) fails
-if [ $CREATE_STACK_STATUS != "CREATE_COMPLETE" ]; 
+if [ $CREATE_STACK_STATUS != "CREATE_COMPLETE" ];
 then
     echo "AWS SAM deployment failed with status [$CREATE_STACK_STATUS]; Exiting..."
     exit 1;
@@ -195,7 +195,7 @@ fi
 # |*********************************************************************************|
 
 #6 |************************ Populate aws-exports.js *******************************|
-# Retrieves the awsexports value from CloudFormation OUTPUT and save results to the ~/src/aws-exports.js file for React Web App 
+# Retrieves the awsexports value from CloudFormation OUTPUT and save results to the ~/src/aws-exports.js file for React Web App
 echo "Step 6 [AWS-Exports] Retrieving the awsexports from CloudFormation and writing constants to ~/clients/web/react/src/aws-exports.js"
 aws cloudformation --region $AWS_REGION describe-stacks --stack-name $CF_STACK_NAME --profile $AWS_CLI_PROFILE --query "Stacks[0].Outputs[?OutputKey=='AWSExports'].OutputValue" --output text > ../.././clients/web/react/src/aws-exports.js
 
@@ -229,7 +229,7 @@ echo "Step 10 [Web Client] Retrieving Amplify App Id from CloudFormation Stack O
 AMPLIFY_APP_ID=$(aws cloudformation --region $AWS_REGION describe-stacks --stack-name $CF_STACK_NAME --profile $AWS_CLI_PROFILE --query "Stacks[0].Outputs[?OutputKey=='AmplifyHostingAppId'].OutputValue" --output text)
 
 #11 |*********** Deploy React App to AWS Amplify Hosting **************************|
-# Call start-deployment of the client web app by passing in the zip file to the previously created Amplify Hosting AMPLIFY_HOSTING_BRANCH_NAME branch 
+# Call start-deployment of the client web app by passing in the zip file to the previously created Amplify Hosting AMPLIFY_HOSTING_BRANCH_NAME branch
 echo "Step 11 [Web Client] Deploying React Web Client to Amplify Hosting"
 aws amplify start-deployment --app-id $AMPLIFY_APP_ID --branch-name $AMPLIFY_HOSTING_BRANCH_NAME --region $AWS_REGION --source-url s3://$S3_BUCKET_NAME/Archive.zip --profile $AWS_CLI_PROFILE &> /dev/null
 
